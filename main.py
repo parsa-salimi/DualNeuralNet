@@ -33,24 +33,15 @@ import itertools
 import matplotlib.pyplot as plt
 from hypergraph import *
 from reward import score
+from params import *
 
-#Hypergraph parameters:
-N = 8 #number of variables
-#first, let's consider only 2 element subsets
-MYN = 2**N - 2 + N - 1
+
+
 list_N = range(1,N+1)
 combs_N = []
 for i in range(1,N):
 	combs_N.extend(list(itertools.combinations(list_N,i)))
 
-
-#N = 19   #number of vertices in the graph. Only used in the reward function, not directly relevant to the algorithm 
-#MYN = int(N*(N-1)/2)  #The length of the word we are generating. Here we are generating a graph, so we create a 0-1 word of length (N choose 2)
-
-LEARNING_RATE = 0.00001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
-n_sessions =1000 #number of new sessions per iteration
-percentile = 93 #top 100-X percentile we are learning from
-super_percentile = 94 #top 100-X percentile that survives to next iteration
 
 FIRST_LAYER_NEURONS = 128 #Number of neurons in the hidden layers.
 SECOND_LAYER_NEURONS = 64
@@ -70,7 +61,6 @@ len_game = MYN
 state_dim = (observation_space,)
 
 INF = 1000000
-
 
 
 
@@ -102,18 +92,6 @@ def calcScore(state):
 				primal.append(i)
 
 	primal = reduce(primal)
-	"""
-	if (len(vars(primal)) < N ):
-		return -INF
-	dual = dual(primal)
-	#print("primal",primal)
-	#print("dual",dual)
-	myfreq =  maxTotalFreq(primal,dual)
-	#if myfreq > 0.5:
-	#	myfreq = myfreq + 1
-	sumlen = len(primal) + len(dual)
-	myScore = myfreq * math.log(sumlen,2)  
-	return -myScore """
 	return score(primal)
 
 
@@ -122,9 +100,7 @@ def calcScore(state):
 
 
 ####RL algorithm is implemented below. 
-	
-	
-						
+
 
 def generate_session(agent, n_sessions, verbose = 1):
 	"""
@@ -253,6 +229,7 @@ score_time = 0
 
 myRand = random.randint(0,1000) #used in the filename
 
+#main loop
 for i in range(1000000): #1000000 generations should be plenty
 	#generate new sessions
 	#performance can be improved with joblib
@@ -302,7 +279,8 @@ for i in range(1000000): #1000000 generations should be plenty
 	mean_best_reward = np.mean(super_rewards)	
 
 	score_time = time.time()-tic
-	
+
+	#generate output
 	print("\n" + str(i) +  ". Best individuals: " + str(np.flip(np.sort(super_rewards))))
 	
 	#uncomment below line to print out how much time each step in this loop takes. 
@@ -312,13 +290,7 @@ for i in range(1000000): #1000000 generations should be plenty
 	if (i%50 == 1): #Write all important info to files every 20 iterations
 		with open('best_species_txt_'+str(myRand)+'.txt', 'w') as f:
 			for item in super_actions:
-				state = list(item)
-				primal = []
-				for (k,j) in zip(combs_N,range(MYN)):
-					if (state[j] == 1):
-						primal.append(k)
-				primal = reduce(primal)
-				f.write(str(primal))
+				f.write(item)
 				f.write("\n")
 		with open('best_100_rewards_'+str(myRand)+'.txt', 'a') as f:
 			f.write(str(mean_all_reward)+"\n")
@@ -326,12 +298,6 @@ for i in range(1000000): #1000000 generations should be plenty
 			f.write(str(mean_best_reward)+"\n")
 	if (i%100==2): # To create a timeline, like in Figure 3
 		with open('best_species_timeline_txt_'+str(myRand)+'.txt', 'a') as f:
-			state = super_actions[0]
-			primal = []
-			for (k,j) in zip(combs_N,range(MYN)):
-				if (state[j] == 1):
-					primal.append(k)
-			primal = reduce(primal)
-			f.write(str(primal))
+			f.write(super_actions[0])
 			f.write("\n")
 			
