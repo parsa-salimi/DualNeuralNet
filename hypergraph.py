@@ -1,3 +1,7 @@
+from params import N
+
+list_N = range(1,N+1)
+
 def vars(f):
 	flat_list = [item for sublist in f for item in sublist]
 	return list(set(flat_list))

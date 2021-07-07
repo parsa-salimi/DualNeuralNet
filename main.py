@@ -21,8 +21,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, LSTM
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import load_model
 from statistics import mean
@@ -50,7 +49,7 @@ THIRD_LAYER_NEURONS = 4
 n_actions = 2 #The size of the alphabet. In this file we will assume this is 2. There are a few things we need to change when the alphabet size is larger,
 			  #such as one-hot encoding the input, and using categorical_crossentropy as a loss function.
 			  
-observation_space = 2*MYN #Leave this at 2*MYN. The input vector will have size 2*MYN, where the first MYN letters encode our partial word (with zeros on
+observation_space = MYN #Leave this at 2*MYN. The input vector will have size 2*MYN, where the first MYN letters encode our partial word (with zeros on
 						  #the positions we haven't considered yet), and the next MYN bits one-hot encode which letter we are considering now.
 						  #So e.g. [0,1,0,0,   0,0,1,0] means we have the partial word 01 and we are considering the third letter now.
 						  #Is there a better way to format the input to make it easier for the neural network to understand things?
@@ -60,7 +59,7 @@ observation_space = 2*MYN #Leave this at 2*MYN. The input vector will have size 
 len_game = MYN 
 state_dim = (observation_space,)
 
-INF = 1000000
+
 
 
 
@@ -69,6 +68,7 @@ INF = 1000000
 #It is important that the loss is binary cross-entropy if alphabet size is 2.
 
 model = keras.Sequential()
+"""
 model.add(Dense(256,  activation="relu"))
 model.add(Dense(FIRST_LAYER_NEURONS,  activation="relu"))
 model.add(Dense(FIRST_LAYER_NEURONS, activation="relu"))
@@ -78,8 +78,11 @@ model.add(Dense(16,  activation="relu"))
 model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(1, activation="sigmoid"))
 model.build((None, observation_space))
-model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate
-
+model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate"""
+model.add(tf.keras.layers.LSTM(16))
+model.add(Dense(1,activation="sigmoid"))
+model.build((None, None,1))
+model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = LEARNING_RATE))
 print(model.summary())
 
 
@@ -113,7 +116,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 	actions = np.zeros([n_sessions, len_game], dtype = int)
 	state_next = np.zeros([n_sessions,observation_space], dtype = int)
 	prob = np.zeros(n_sessions)
-	states[:,MYN,0] = 1
+	#states[:,MYN,0] = 1
 	step = 0
 	total_score = np.zeros([n_sessions])
 	recordsess_time = 0
@@ -124,9 +127,9 @@ def generate_session(agent, n_sessions, verbose = 1):
 		step += 1		
 		tic = time.time()
 		#prob = agent(states[:,:,step-1])
-		prob = agent.predict(states[:,:,step-1], batch_size = n_sessions) 
+		data = states[:,0:step,step-1].reshape((n_sessions,step,1))
+		prob = agent.predict(data, batch_size = n_sessions) 
 		pred_time += time.time()-tic
-		
 		for i in range(n_sessions):
 			
 			if np.random.rand() < prob[i]:
@@ -139,9 +142,9 @@ def generate_session(agent, n_sessions, verbose = 1):
 			play_time += time.time()-tic
 			if (action > 0):
 				state_next[i][step-1] = action		
-			state_next[i][MYN + step-1] = 0
-			if (step < MYN):
-				state_next[i][MYN + step] = 1			
+			#state_next[i][MYN + step-1] = 0
+			#if (step < MYN):
+			#	state_next[i][MYN + step] = 1			
 			terminal = step == MYN
 			tic = time.time()
 			if terminal:
@@ -265,6 +268,10 @@ for i in range(1000000): #1000000 generations should be plenty
 	select3_time = time.time()-tic
 	
 	tic = time.time()
+	
+	
+	elite_states = elite_states.reshape((-1,MYN,1))
+	elite_actions = elite_actions.reshape((-1,1))
 	model.fit(elite_states, elite_actions) #learn from the elite sessions
 	fit_time = time.time()-tic
 	
@@ -290,7 +297,7 @@ for i in range(1000000): #1000000 generations should be plenty
 	if (i%50 == 1): #Write all important info to files every 20 iterations
 		with open('best_species_txt_'+str(myRand)+'.txt', 'w') as f:
 			for item in super_actions:
-				f.write(item)
+				f.write(str(item))
 				f.write("\n")
 		with open('best_100_rewards_'+str(myRand)+'.txt', 'a') as f:
 			f.write(str(mean_all_reward)+"\n")
@@ -298,6 +305,6 @@ for i in range(1000000): #1000000 generations should be plenty
 			f.write(str(mean_best_reward)+"\n")
 	if (i%100==2): # To create a timeline, like in Figure 3
 		with open('best_species_timeline_txt_'+str(myRand)+'.txt', 'a') as f:
-			f.write(super_actions[0])
+			f.write(str(super_actions[0]))
 			f.write("\n")
 			

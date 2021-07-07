@@ -1,13 +1,14 @@
 from hypergraph import *
 from params import *
+import math
 
 def FreqGuaranteeScore(primal):
 	if (len(vars(primal)) < N ):
 		return -INF
-	dual = dual(primal)
-	myfreq =  maxTotalFreq(primal,dual)
+	d = dual(primal)
+	myfreq =  maxTotalFreq(primal,d)
 
-	sumlen = len(primal) + len(dual)
+	sumlen = len(primal) + len(d)
 	myScore = myfreq * math.log(sumlen,2)  
 	return -myScore 
 
