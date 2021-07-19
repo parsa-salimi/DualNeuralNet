@@ -9,7 +9,7 @@ def FreqGuaranteeScore(primal):
 	myfreq =  maxTotalFreq(primal,d)
 
 	sumlen = len(primal) + len(d)
-	myScore = myfreq * math.log(sumlen,2)  
+	myScore = myfreq  
 	return -myScore 
 
 def score(f):

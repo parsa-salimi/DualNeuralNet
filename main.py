@@ -15,13 +15,12 @@
 
 
 
-import networkx as nx #for various graph parameters, such as eigenvalues, macthing number, etc
 import random
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.layers import Dense, LSTM
+from tensorflow.keras.layers import Dense, LSTM, SimpleRNN
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.models import load_model
 from statistics import mean
@@ -79,9 +78,9 @@ model.add(Dense(THIRD_LAYER_NEURONS, activation="relu"))
 model.add(Dense(1, activation="sigmoid"))
 model.build((None, observation_space))
 model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = LEARNING_RATE)) #Adam optimizer also works well, with lower learning rate"""
-model.add(tf.keras.layers.LSTM(16))
+model.add(SimpleRNN(128,input_shape = ((None,1))))
 model.add(Dense(1,activation="sigmoid"))
-model.build((None, None,1))
+#model.build((None, None,1))
 model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate = LEARNING_RATE))
 print(model.summary())
 
@@ -112,9 +111,9 @@ def generate_session(agent, n_sessions, verbose = 1):
 	
 	Code inspired by https://github.com/yandexdataschool/Practical_RL/blob/master/week01_intro/deep_crossentropy_method.ipynb
 	"""
-	states =  np.zeros([n_sessions, observation_space, len_game], dtype=int)
-	actions = np.zeros([n_sessions, len_game], dtype = int)
-	state_next = np.zeros([n_sessions,observation_space], dtype = int)
+	states =  np.zeros([n_sessions, observation_space, len_game], dtype=bool)
+	actions = np.zeros([n_sessions, len_game], dtype = bool)
+	state_next = np.zeros([n_sessions,observation_space], dtype = bool)
 	prob = np.zeros(n_sessions)
 	#states[:,MYN,0] = 1
 	step = 0
@@ -158,7 +157,7 @@ def generate_session(agent, n_sessions, verbose = 1):
 		
 		if terminal:
 			break
-	#If you want, print out how much time each step has taken. This is useful to find the bottleneck in the program.		
+	#If you want, prbool out how much time each step has taken. This is useful to find the bottleneck in the program.		
 	if (verbose):
 		print("Predict: "+str(pred_time)+", play: " + str(play_time) +", scorecalc: " + str(scorecalc_time) +", recordsess: " + str(recordsess_time))
 	return states, actions, total_score
@@ -191,8 +190,8 @@ def select_elites(states_batch, actions_batch, rewards_batch, percentile=50):
 				for item in actions_batch[i]:
 					elite_actions.append(item)			
 			counter -= 1
-	elite_states = np.array(elite_states, dtype = int)	
-	elite_actions = np.array(elite_actions, dtype = int)	
+	elite_states = np.array(elite_states, dtype = bool)	
+	elite_actions = np.array(elite_actions, dtype = bool)	
 	return elite_states, elite_actions
 	
 def select_super_sessions(states_batch, actions_batch, rewards_batch, percentile=90):
@@ -215,14 +214,14 @@ def select_super_sessions(states_batch, actions_batch, rewards_batch, percentile
 				super_actions.append(actions_batch[i])
 				super_rewards.append(rewards_batch[i])
 				counter -= 1
-	super_states = np.array(super_states, dtype = int)
-	super_actions = np.array(super_actions, dtype = int)
+	super_states = np.array(super_states, dtype = bool)
+	super_actions = np.array(super_actions, dtype = bool)
 	super_rewards = np.array(super_rewards)
 	return super_states, super_actions, super_rewards
 	
 
-super_states =  np.empty((0,len_game,observation_space), dtype = int)
-super_actions = np.array([], dtype = int)
+super_states =  np.empty((0,len_game,observation_space), dtype = bool)
+super_actions = np.array([], dtype = bool)
 super_rewards = np.array([])
 sessgen_time = 0
 fit_time = 0
@@ -241,8 +240,8 @@ for i in range(1000000): #1000000 generations should be plenty
 	sessgen_time = time.time()-tic
 	tic = time.time()
 	
-	states_batch = np.array(sessions[0], dtype = int)
-	actions_batch = np.array(sessions[1], dtype = int)
+	states_batch = np.array(sessions[0], dtype = bool)
+	actions_batch = np.array(sessions[1], dtype = bool)
 	rewards_batch = np.array(sessions[2])
 	states_batch = np.transpose(states_batch,axes=[0,2,1])
 	

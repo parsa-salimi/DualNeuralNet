@@ -1,4 +1,4 @@
-N = 12 #number of variables
+N = 14 #number of variables
 MYN = 2**N - 2 + N - 1
 
 LEARNING_RATE = 0.00001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
