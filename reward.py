@@ -13,4 +13,4 @@ def FreqGuaranteeScore(primal):
 	return -myScore 
 
 def score(f):
-	return FreqGuaranteeScore(f)
+	return len(f)

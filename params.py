@@ -1,5 +1,5 @@
-N = 14 #number of variables
-MYN = 2**N - 2 + N - 1
+N = 8 #number of variables
+MYN = 2**N 
 
 LEARNING_RATE = 0.00001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
 n_sessions =1000 #number of new sessions per iteration

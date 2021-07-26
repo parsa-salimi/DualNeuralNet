@@ -88,10 +88,9 @@ print(model.summary())
 
 def calcScore(state):
 	primal = []
-	for (i,j) in zip(combs_N,range(MYN - N + 1)) :
-		if (state[j + N - 1] == 1):
-			if (state[len(i)] == 1):
-				primal.append(i)
+	for (i,j) in zip(combs_N,range(MYN)) :
+		if (state[j] == 1):
+			primal.append(i)
 
 	primal = reduce(primal)
 	return score(primal)

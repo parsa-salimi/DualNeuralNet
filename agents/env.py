@@ -15,6 +15,7 @@ from tf_agents.drivers.dynamic_step_driver import DynamicStepDriver
 from tf_agents.drivers.dynamic_episode_driver import DynamicEpisodeDriver
 from tf_agents.policies.random_tf_policy import RandomTFPolicy
 from tf_agents.trajectories.trajectory import to_transition
+from tf_agents.utils.common import function
 import logging
 import itertools
 from hypergraph import *
@@ -44,8 +45,8 @@ class HyperGraphEnv(py_environment.PyEnvironment):
     self._action_spec = array_spec.BoundedArraySpec(
         shape=(), dtype=np.int32, minimum=0, maximum=1, name='action')
     self._observation_spec = array_spec.BoundedArraySpec(
-        shape=(state_dim,), dtype=np.int32, minimum=0, name='observation')
-    self._state = np.zeros(state_dim)
+        shape=(2 * state_dim,), dtype=np.int32, minimum=0, name='observation')
+    self._state = np.zeros(2 * state_dim)
     self._episode_ended = False
     self.time = 0
 
@@ -56,7 +57,7 @@ class HyperGraphEnv(py_environment.PyEnvironment):
     return self._observation_spec
 
   def _reset(self):
-    self._state = np.zeros(state_dim)
+    self._state = np.zeros(state_dim * 2)
     self._episode_ended = False
     self.time = 0
     return ts.restart(np.array(self._state, dtype=np.int32))
@@ -77,13 +78,16 @@ class HyperGraphEnv(py_environment.PyEnvironment):
     else:
       raise ValueError('`action` should be 0 or 1.')
 
+    self._state[self.time + state_dim] = 0
     self.time += 1
 
     if self.time >= state_dim:
         self._episode_ended = True
+    else:
+      self._state[self.time + state_dim] = 1
 
     if self._episode_ended:
-      reward = calcScore(self._state)
+      reward = calcScore(self._state[:state_dim])
       return ts.termination(np.array(self._state, dtype=np.int32), reward)
     else:
       return ts.transition(
@@ -93,7 +97,7 @@ class HyperGraphEnv(py_environment.PyEnvironment):
 env = HyperGraphEnv()
 tf_env = TFPyEnvironment(env)
 
-fc_layer_params=[512,256,256,64]
+fc_layer_params=[128,128,64]
 q_net = QRnnNetwork(tf_env.observation_spec(), tf_env.action_spec(), lstm_size=(16,))
 q_net_2 = q_net = QNetwork(
     tf_env.observation_spec(),
@@ -102,21 +106,32 @@ q_net_2 = q_net = QNetwork(
 
 #agent
 train_step = tf.Variable(0)
-optimizer = tf.keras.optimizers.RMSprop(learning_rate=2.5e-4, rho=0.95, momentum=0.0, epsilon=0.00001, centered= True)
+#optimizer = tf.keras.optimizers.RMSprop(learning_rate=2.5e-4, rho=0.95, momentum=0.0, epsilon=0.00001, centered= True)
+optimizer = tf.keras.optimizers.Adam(lr=0.0001)
+decay_fn = tf.keras.optimizers.schedules.PolynomialDecay(
+  initial_learning_rate = 1.0,
+  decay_steps = 2500,
+  end_learning_rate = 0.01
+)
 agent = DqnAgent(tf_env.time_step_spec(), 
                  tf_env.action_spec(),
                  q_network=q_net_2, 
                  optimizer = optimizer,
                  td_errors_loss_fn = tf.keras.losses.Huber(reduction="none"),
-                 epsilon_greedy = 0.01)
+                 train_step_counter = train_step,
+                 target_update_period = 100,
+                 epsilon_greedy = lambda : decay_fn(train_step))
 agent.initialize()
 
+print(tf_env.batch_size)
+print(agent.collect_data_spec)
+print(tf_env.batch_size)
 
 #replay buffer
 replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
   data_spec = agent.collect_data_spec,
   batch_size = tf_env.batch_size,
-  max_length = 1000
+  max_length = 1000000
 )
 
 replay_buffer_observer = replay_buffer.add_batch
@@ -126,6 +141,7 @@ train_metrics = [
     tf_metrics.NumberOfEpisodes(),
     tf_metrics.EnvironmentSteps(),
     tf_metrics.AverageReturnMetric(),
+    tf_metrics.MaxReturnMetric(),
     tf_metrics.AverageEpisodeLengthMetric(),
 ]
 
@@ -149,7 +165,7 @@ collect_driver = DynamicEpisodeDriver(
     tf_env,
     agent.collect_policy,
     observers=[replay_buffer_observer] + train_metrics,
-    num_episodes=1)
+    num_episodes=15)
 
 initial_collect_policy = RandomTFPolicy(tf_env.time_step_spec(),
                                         tf_env.action_spec())
@@ -157,7 +173,7 @@ init_driver = DynamicEpisodeDriver(
     tf_env,
     initial_collect_policy,
     observers=[replay_buffer.add_batch, ShowProgress(20000)],
-    num_episodes=100) # <=> 80,000 ALE frames
+    num_episodes=1000) 
 final_time_step, final_policy_state = init_driver.run()
 
 
@@ -168,7 +184,7 @@ tf.random.set_seed(9) # chosen to show an example of trajectory at the end of an
 
 trajectories, buffer_info = next(iter(replay_buffer.as_dataset(
     sample_batch_size=2,
-    num_steps=3,
+    num_steps= 2,
     single_deterministic_pass=False)))
 
 time_steps, action_steps, next_time_steps = to_transition(trajectories)
@@ -176,8 +192,11 @@ time_steps.observation.shape
 
 dataset = replay_buffer.as_dataset(
     sample_batch_size=64,
-    num_steps=2,
+    num_steps= 2,
     num_parallel_calls=3).prefetch(3)
+
+collect_driver.run = function(collect_driver.run)
+agent.train = function(agent.train)
 
 def train_agent(n_iterations):
     time_step = None
@@ -189,7 +208,7 @@ def train_agent(n_iterations):
         train_loss = agent.train(trajectories)
         print("\r{} loss:{:.5f}".format(
             iteration, train_loss.loss.numpy()), end="")
-        if iteration % 1000 == 0:
+        if iteration % 100 == 0:
             log_metrics(train_metrics)
 
 
