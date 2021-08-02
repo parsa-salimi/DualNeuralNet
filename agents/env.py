@@ -26,17 +26,20 @@ from params import *
 state_dim = 2**N
 list_N = range(1,N+1)
 combs_N = []
-for i in range(1,N):
+for i in range(1,N+1):
 	combs_N.extend(list(itertools.combinations(list_N,i)))
 
 def calcScore(state):
-	primal = []
-	for (i,j) in zip(combs_N,range(state_dim -1)) :
-		if (state[j] == 1):
-			primal.append(i)
+  primal = []
+  for (i,j) in zip(combs_N,range(state_dim)):
+    if (state[j] == 1):
+      primal.append(i)
 
-	primal = reduce(primal)
-	return len(primal)
+  #primal = reduce(primal)
+  return len(primal)
+
+
+
 
 class HyperGraphEnv(py_environment.PyEnvironment):
 
@@ -49,6 +52,7 @@ class HyperGraphEnv(py_environment.PyEnvironment):
     self._state = np.zeros(2 * state_dim)
     self._episode_ended = False
     self.time = 0
+    self.mask = np.zeros(state_dim)
 
   def action_spec(self):
     return self._action_spec
@@ -60,6 +64,7 @@ class HyperGraphEnv(py_environment.PyEnvironment):
     self._state = np.zeros(state_dim * 2)
     self._episode_ended = False
     self.time = 0
+    self.mask = np.zeros(state_dim)
     return ts.restart(np.array(self._state, dtype=np.int32))
 
   def _step(self, action):
@@ -70,8 +75,13 @@ class HyperGraphEnv(py_environment.PyEnvironment):
       return self.reset()
 
     # Make sure episodes don't go on forever.
-    
-    if action == 1:
+    if self.mask[self.time] == 1:
+      self._state[self.time] == 0
+    elif action == 1:
+      #mask out all of the next actions
+      for i in range(state_dim - self.time - 1):
+        if set(combs_N[self.time]).issubset(set(combs_N[i + self.time])):
+          self.mask[i + self.time] = 1
       self._state[self.time] = 1
     elif action == 0:
       self._state[self.time] = 0
@@ -110,8 +120,8 @@ train_step = tf.Variable(0)
 optimizer = tf.keras.optimizers.Adam(lr=0.0001)
 decay_fn = tf.keras.optimizers.schedules.PolynomialDecay(
   initial_learning_rate = 1.0,
-  decay_steps = 2500,
-  end_learning_rate = 0.01
+  decay_steps = 25000,
+  end_learning_rate = 0.03
 )
 agent = DqnAgent(tf_env.time_step_spec(), 
                  tf_env.action_spec(),
@@ -142,7 +152,6 @@ train_metrics = [
     tf_metrics.EnvironmentSteps(),
     tf_metrics.AverageReturnMetric(),
     tf_metrics.MaxReturnMetric(),
-    tf_metrics.AverageEpisodeLengthMetric(),
 ]
 
 
@@ -165,7 +174,7 @@ collect_driver = DynamicEpisodeDriver(
     tf_env,
     agent.collect_policy,
     observers=[replay_buffer_observer] + train_metrics,
-    num_episodes=15)
+    num_episodes=2)
 
 initial_collect_policy = RandomTFPolicy(tf_env.time_step_spec(),
                                         tf_env.action_spec())
@@ -213,7 +222,7 @@ def train_agent(n_iterations):
 
 
 
-train_agent(n_iterations=50000)
+train_agent(n_iterations=500000)
 
 
 
