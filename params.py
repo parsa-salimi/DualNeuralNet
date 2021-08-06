@@ -7,3 +7,5 @@ percentile = 93 #top 100-X percentile we are learning from
 super_percentile = 94 #top 100-X percentile that survives to next iteration
 INF = 1000000
 
+
+replay_buffer_capacity = 200000 # @param {type:"integer"}
