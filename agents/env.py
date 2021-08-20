@@ -24,7 +24,7 @@ from params import *
 
 
 
-state_dim = 2**N
+#state_dim = 2**N
 list_N = range(1,N+1)
 combs_N = []
 for i in range(1,N+1):
