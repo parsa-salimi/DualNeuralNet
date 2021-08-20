@@ -1,21 +1,14 @@
 from env import *
+from params import *
+from replayBuffer import *
 env = HyperGraphEnv()
 #tf_env = TFPyEnvironment(env)
 train_env = TFPyEnvironment(env)
 eval_env = TFPyEnvironment(env)
 
-#hypermarameters
-fc_layer_params=[64,64,64,64,64,64]
 
-#from here RINFORCE
 
-num_iterations = 2500000000 # @param {type:"integer"}
-collect_episodes_per_iteration = 3 # @param {type:"integer"}
 
-learning_rate = 1e-2 # @param {type:"number"}
-log_interval = 10 # @param {type:"integer"}
-num_eval_episodes = 10 # @param {type:"integer"}
-eval_interval = 50 # @param {type:"integer"}
 
 
 actor_net = actor_distribution_network.ActorDistributionNetwork(
@@ -24,7 +17,7 @@ actor_net = actor_distribution_network.ActorDistributionNetwork(
     fc_layer_params=fc_layer_params)
 
 #optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
-optimizer =tf.compat.v1.train.AdamOptimizer(learning_rate=0.003)
+optimizer =tf.compat.v1.train.AdamOptimizer(learning_rate=0.00003)
 
 train_step_counter = tf.compat.v2.Variable(0)
 
@@ -40,6 +33,22 @@ tf_agent.initialize()
 
 eval_policy = tf_agent.policy
 collect_policy = tf_agent.collect_policy
+
+#replay buffer
+replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
+  #data_spec = agent.collect_data_spec,
+  data_spec = tf_agent.collect_data_spec,
+  batch_size = train_env.batch_size,
+  max_length = replay_buffer_capacity
+)
+replay_buffer_observer = replay_buffer.add_batch
+
+collect_driver = DynamicEpisodeDriver(
+    train_env,
+    collect_policy,
+    observers=[replay_buffer.add_batch, ShowProgress(200)] + train_metrics,
+    num_episodes=3) 
+final_time_step, final_policy_state = collect_driver.run()
 
 
 
@@ -98,19 +107,24 @@ tf_agent.train = function(tf_agent.train)
 tf_agent.train_step_counter.assign(0)
 
 
+
 for _ in range(num_iterations):
 
   # Collect a few episodes using collect_policy and save to the replay buffer.
-  collect_episode(
-      train_env, tf_agent.collect_policy, collect_episodes_per_iteration)
+  #collect_episode(
+  #    train_env, tf_agent.collect_policy, collect_episodes_per_iteration)
+  collect_driver.run(num_episodes= collect_episodes_per_iteration)
 
   # Evaluate the agent's policy once before training.
-  avg_return = compute_avg_return(eval_env, tf_agent.policy, num_eval_episodes)
-  returns = [avg_return]
+  #avg_return = compute_avg_return(eval_env, tf_agent.policy, num_eval_episodes)
+  #returns = [avg_return]
 
 
   # Use data from the buffer and update the agent's network.
   experience = replay_buffer.gather_all()
+
+
+  
   train_loss = tf_agent.train(experience)
   replay_buffer.clear()
 
@@ -120,6 +134,8 @@ for _ in range(num_iterations):
     print('step = {0}: loss = {1}'.format(step, train_loss.loss))
 
   if step % eval_interval == 0:
-    avg_return = compute_avg_return(eval_env, tf_agent.policy, num_eval_episodes)
-    print('step = {0}: Average Return = {1}'.format(step, avg_return))
-    returns.append(avg_return)
+    log_metrics(train_metrics)
+    #avg_return = compute_avg_return(eval_env, tf_agent.policy, num_eval_episodes)
+    #print('step = {0}: Average Return = {1}'.format(step, avg_return))
+    #returns.append(avg_return)
+    
