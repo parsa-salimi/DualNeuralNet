@@ -146,23 +146,24 @@ class Iteration:
 		print("\n" + str(self.iteration_number) +  ". Best individuals: " + str(np.flip(np.sort(self.super_rewards))))
 		self.iteration_number += 1
 	
-		if (self.useRNN == True):
-			networkIndicatorString= 'RNN'
-		else:
-			networkIndicatorString = 'FNN'
+		if (params.printSpecies == True):
+			if (self.useRNN == True):
+				networkIndicatorString= 'RNN'
+			else:
+				networkIndicatorString = 'FNN'
 
-		path_folder = Path("results/" )
-		if (self.iteration_number%5 == 1): #Write all important info to files every 5 iterations
-			with open(path_folder /  (networkIndicatorString+ str(params.N) +'vars_best_100_rewards_'+str(self.myRand)+'.txt') , 'a') as f:
-				f.write(str(mean_all_reward)+"\n")
-			with open(path_folder / (networkIndicatorString+'vars_best_elite_rewards_'+str(self.myRand)+'.txt'), 'a') as f:
-				f.write(str(mean_best_reward)+"\n")
-			with open(path_folder / (networkIndicatorString+ str(params.N) + 'vars_best_episode_reward'+str(self.myRand)+'.txt'),'a') as f:
-				f.write(str(np.amax(self.super_rewards)) + "\n" )
-		if (self.iteration_number%50 == 1):
-			with open(path_folder / (networkIndicatorString+ str(params.N) + 'vars_best_species_'+str(self.myRand)+'.txt'), 'w') as f:
-				for item in self.super_actions:
-					hg = reduce(convert(item))
-					f.write(str(hg) + "\n" + str(dual(hg)) + "\n" + str(score(hg)))
-					f.write("\n ============\n")
+			path_folder = Path("results/" )
+			if (self.iteration_number%5 == 1): #Write all important info to files every 5 iterations
+				with open(path_folder /  (networkIndicatorString+ str(params.N) +'vars_best_100_rewards_'+str(self.myRand)+'.txt') , 'a') as f:
+					f.write(str(mean_all_reward)+"\n")
+				with open(path_folder / (networkIndicatorString+'vars_best_elite_rewards_'+str(self.myRand)+'.txt'), 'a') as f:
+					f.write(str(mean_best_reward)+"\n")
+				with open(path_folder / (networkIndicatorString+ str(params.N) + 'vars_best_episode_reward'+str(self.myRand)+'.txt'),'a') as f:
+					f.write(str(np.amax(self.super_rewards)) + "\n" )
+			if (self.iteration_number%50 == 1):
+				with open(path_folder / (networkIndicatorString+ str(params.N) + 'vars_best_species_'+str(self.myRand)+'.txt'), 'w') as f:
+					for item in self.super_actions:
+						hg = reduce(convert(item))
+						f.write(str(hg) + "\n" + str(dual(hg)) + "\n" + str(score(hg)))
+						f.write("\n ============\n")
 

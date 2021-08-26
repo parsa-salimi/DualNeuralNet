@@ -25,4 +25,7 @@ INF = 1000000
 NEURONS_PER_LAYER = 128
 LSTM_CELLS        = 128
 
+#set this to false if you just need to observe the live performance of the network without creating extra files
+printSpecies = True
+
 
