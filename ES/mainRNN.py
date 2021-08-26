@@ -6,15 +6,16 @@ import math
 import params
 from ESutils import *
 			  
-observation_space = params.len_game
+observation_space = params.MYN
 state_dim = (observation_space,)
 
 #Model structure: a sequential network with three hidden layers, sigmoid activation in the output.
 #I usually used relu activation in the hidden layers but play around to see what activation function and what optimizer works best.
 #It is important that the loss is binary cross-entropy if alphabet size is 2.
-model = keras.Sequential()
-model.add(keras.layers.LSTM(128,input_shape = ((None,1))))
-model.add(keras.layers.Dense(1,activation="sigmoid"))
+model = keras.Sequential([
+	keras.layers.LSTM(params.LSTM_CELLS,input_shape = ((None,1)), return_sequences = True ),
+	keras.layers.LSTM(params.LSTM_CELLS,input_shape = ((None,1))),
+	keras.layers.Dense(1,activation="sigmoid")])
 model.compile(loss="binary_crossentropy", optimizer= keras.optimizers.Adam(learning_rate = params.LEARNING_RATE))
 print(model.summary())
 
@@ -45,7 +46,7 @@ def generate_session(agent, n_sessions):
 			state_next[i] = states[i,:,step-1]
 			if (action > 0):
 				state_next[i][step-1] = action					
-			terminal = step == params.len_game
+			terminal = step == params.MYN
 			if terminal:
 				total_score[i] = calcScore(state_next[i])
 			if not terminal:
@@ -56,6 +57,6 @@ def generate_session(agent, n_sessions):
 	
 
 RNNIterator = Iteration(useRNN = True, model = model, generate_session = generate_session)
-for i in range(1000000):
+for i in range(3000):
 	RNNIterator.run()
 			

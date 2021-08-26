@@ -20,7 +20,7 @@ collect_episodes_per_iteration = 1000 # @param {type:"integer"}
 learning_rate = 1e-2 # @param {type:"number"}
 log_interval = 10 # @param {type:"integer"}
 num_eval_episodes = 10 # @param {type:"integer"}
-eval_interval = 50 # @param {type:"integer"}
+eval_interval = 10 # @param {type:"integer"}
 
 #reinforceEpisodesPerIteration = 10
 

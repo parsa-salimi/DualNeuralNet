@@ -1,7 +1,8 @@
 import itertools
 
 N = 5 #number of variables
-len_game = 2**N - 1
+MYN = 2**N - 1
+len_game = MYN 
 #N is the number of variables set in params.py
 list_N = range(1,N+1)
 combs_N = []
@@ -22,6 +23,6 @@ super_percentile = 94 #top 100-X percentile that survives to next iteration
 INF = 1000000
 
 NEURONS_PER_LAYER = 128
-
+LSTM_CELLS        = 128
 
 
