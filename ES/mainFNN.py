@@ -17,11 +17,11 @@ from ESutils import *
 
 
 #size of each state/observation
-#Leave this at 2*MYN for feedforward networks
-# the first MYN letters encode our partial word (with zeros on
-#the positions we haven't considered yet), and the next MYN bits one-hot encode which letter we are considering now.
+#Leave this at 2*len_game for feedforward networks
+# the first len_game letters encode our partial word (with zeros on
+#the positions we haven't considered yet), and the next len_game bits one-hot encode which letter we are considering now.
 #So e.g. [0,1,0,0,   0,0,1,0] means we have the partial word 01 and we are considering the third letter now.
-observation_space = 2*params.MYN 	
+observation_space = 2*params.len_game 	
 #length of each episode				  
 state_dim = (observation_space,)
 
@@ -68,7 +68,7 @@ def generate_session(agent, n_sessions):
 	state_next = np.zeros([n_sessions,observation_space], dtype = bool)
 	prob = np.zeros(n_sessions)
 	#initial one-hot encoding : we are considering the first edge.
-	states[:,params.MYN,0] = 1
+	states[:,params.len_game,0] = 1
 	step = 0
 	total_score = np.zeros([n_sessions])
 	while (True):
@@ -85,11 +85,11 @@ def generate_session(agent, n_sessions):
 			state_next[i] = states[i,:,step-1]
 			if (action > 0):
 				state_next[i][step-1] = action		
-			state_next[i][params.MYN + step-1] = 0
+			state_next[i][params.len_game + step-1] = 0
 			#if this isn't the last step, one-hot encode the next edge
-			if (step < params.MYN):
-				state_next[i][params.MYN + step] = 1			
-			terminal = step == params.MYN
+			if (step < params.len_game):
+				state_next[i][params.len_game + step] = 1			
+			terminal = step == params.len_game
 			#calculate the score if the hypergraphs are complete.
 			if terminal:
 				total_score[i] = calcScore(state_next[i])

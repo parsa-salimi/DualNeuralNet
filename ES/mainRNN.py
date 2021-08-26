@@ -6,7 +6,7 @@ import math
 import params
 from ESutils import *
 			  
-observation_space = params.MYN
+observation_space = params.len_game
 state_dim = (observation_space,)
 
 #Model structure: a sequential network with three hidden layers, sigmoid activation in the output.
@@ -46,7 +46,7 @@ def generate_session(agent, n_sessions):
 			state_next[i] = states[i,:,step-1]
 			if (action > 0):
 				state_next[i][step-1] = action					
-			terminal = step == params.MYN
+			terminal = step == params.len_game
 			if terminal:
 				total_score[i] = calcScore(state_next[i])
 			if not terminal:

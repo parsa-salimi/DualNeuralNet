@@ -156,7 +156,7 @@ class Iteration:
 				f.write(str(mean_best_reward)+"\n")
 			with open('results\ ' + networkIndicatorString+'best_episode_reward'+str(self.myRand)+'txt','a') as f:
 				f.write(str(np.amax(self.super_rewards)) + "\n" )
-		if (self.iteration_number%5 == 1):
+		if (self.iteration_number%50 == 1):
 			with open('results\ ' + networkIndicatorString+'best_species_'+str(self.myRand)+'.txt', 'w') as f:
 				for item in self.super_actions:
 					hg = reduce(convert(item))
