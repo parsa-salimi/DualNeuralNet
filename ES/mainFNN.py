@@ -27,23 +27,23 @@ state_dim = (observation_space,)
 
 
 
-#we use a feedforward network with relu activations and batch normalization
+#we use a feedforward network with relu activations
 #dropout is not a good idea for RL tasks. see:
 #https://ai.stackexchange.com/questions/8293/why-do-you-not-see-dropout-layers-on-reinforcement-learning-examples/8295
+#We didn't add batch normalization layers in order to have a fair comparison with the DQN networks
+
 model = keras.Sequential([
-	keras.layers.Dense(observation_space, activation="relu"),
-	keras.layers.BatchNormalization(),
+	keras.layers.Dense(params.NEURONS_PER_LAYER*2, activation="relu"),
 	keras.layers.Dense(params.NEURONS_PER_LAYER, activation="relu"),
-	keras.layers.BatchNormalization(),
 	keras.layers.Dense(params.NEURONS_PER_LAYER, activation="relu"),
-	keras.layers.BatchNormalization(),
 	keras.layers.Dense(params.NEURONS_PER_LAYER, activation="relu"),
-	keras.layers.BatchNormalization(),
 	keras.layers.Dense(params.NEURONS_PER_LAYER, activation="relu"),
-	keras.layers.BatchNormalization(),
+	keras.layers.Dense(params.NEURONS_PER_LAYER, activation="relu"),
+	keras.layers.Dense(params.NEURONS_PER_LAYER, activation="relu"),
 	keras.layers.Dense(params.NEURONS_PER_LAYER, activation="relu"),
 	keras.layers.Dense(1, activation="sigmoid"),
 ])
+
 
 model.build((None, observation_space))
 model.compile(loss="binary_crossentropy", optimizer=keras.optimizers.Adam(learning_rate = params.LEARNING_RATE)) 

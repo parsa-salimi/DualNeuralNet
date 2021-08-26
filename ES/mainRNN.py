@@ -13,7 +13,8 @@ state_dim = (observation_space,)
 #I usually used relu activation in the hidden layers but play around to see what activation function and what optimizer works best.
 #It is important that the loss is binary cross-entropy if alphabet size is 2.
 model = keras.Sequential([
-	keras.layers.LSTM(params.LSTM_CELLS,input_shape = ((None,1)), return_sequences = True ),
+	keras.layers.LSTM(params.LSTM_CELLS+38,input_shape = ((None,1)), return_sequences = True ),
+	keras.layers.LSTM(params.LSTM_CELLS,input_shape = ((None,1)), return_sequences = True),
 	keras.layers.LSTM(params.LSTM_CELLS,input_shape = ((None,1))),
 	keras.layers.Dense(1,activation="sigmoid")])
 model.compile(loss="binary_crossentropy", optimizer= keras.optimizers.Adam(learning_rate = params.LEARNING_RATE))

@@ -1,4 +1,4 @@
-N = 4 #number of variables
+N = 7 #number of variables
 state_dim= 2**N  -1
 
 LEARNING_RATE = 0.0001 #Increase this to make convergence faster, decrease if the algorithm gets stuck in local optima too often.
