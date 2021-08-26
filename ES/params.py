@@ -1,6 +1,6 @@
 import itertools
 
-N = 9 #number of variables
+N = 8 #number of variables
 MYN = 2**N - 1
 len_game = MYN 
 #N is the number of variables set in params.py

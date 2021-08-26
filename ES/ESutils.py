@@ -5,6 +5,7 @@ import random
 import numpy as np
 from reward import score
 from hypergraph import reduce, dual
+from pathlib import Path
 
 
 def convert(state):
@@ -149,15 +150,17 @@ class Iteration:
 			networkIndicatorString= 'RNN'
 		else:
 			networkIndicatorString = 'FNN'
+
+		path_folder = Path("results/" )
 		if (self.iteration_number%5 == 1): #Write all important info to files every 5 iterations
-			with open(  networkIndicatorString+'best_100_rewards_'+str(self.myRand)+'.txt', 'a') as f:
+			with open(path_folder /  (networkIndicatorString+ str(params.N) +'vars_best_100_rewards_'+str(self.myRand)+'.txt') , 'a') as f:
 				f.write(str(mean_all_reward)+"\n")
-			with open( networkIndicatorString+'best_elite_rewards_'+str(self.myRand)+'.txt', 'a') as f:
+			with open(path_folder / (networkIndicatorString+'vars_best_elite_rewards_'+str(self.myRand)+'.txt'), 'a') as f:
 				f.write(str(mean_best_reward)+"\n")
-			with open( networkIndicatorString+'best_episode_reward'+str(self.myRand)+'txt','a') as f:
+			with open(path_folder / (networkIndicatorString+ str(params.N) + 'vars_best_episode_reward'+str(self.myRand)+'.txt'),'a') as f:
 				f.write(str(np.amax(self.super_rewards)) + "\n" )
 		if (self.iteration_number%50 == 1):
-			with open( networkIndicatorString+'best_species_'+str(self.myRand)+'.txt', 'w') as f:
+			with open(path_folder / (networkIndicatorString+ str(params.N) + 'vars_best_species_'+str(self.myRand)+'.txt'), 'w') as f:
 				for item in self.super_actions:
 					hg = reduce(convert(item))
 					f.write(str(hg) + "\n" + str(dual(hg)) + "\n" + str(score(hg)))
