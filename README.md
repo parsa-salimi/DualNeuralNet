@@ -17,14 +17,20 @@ the agents folder uses [tf-agents](https://github.com/tensorflow/agents) and imp
  module load scipy-stack
  module load python/3.6
  ```
+ 
  Then, create a virtual environment by typing
+ 
  `virtualencv --no-download [env-name]`
+ 
  A directory `[env-name]` will be created in the current working directory.  Now activate the virtual environment:
+ 
  `source [env-name]/bin/activate`
  Finally, install tensorflow:
+ 
  `pip install tensorflow_gpu`.
  
  We are now ready to run jobs. This is usually done in a batch file as follows:
+ 
  ```
  #!/bin/bash
 #SBATCH --gres=gpu:1        # request GPU "generic resource"
