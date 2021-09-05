@@ -25,6 +25,7 @@ the agents folder uses [tf-agents](https://github.com/tensorflow/agents) and imp
  A directory `[env-name]` will be created in the current working directory.  Now activate the virtual environment:
  
  `source [env-name]/bin/activate`
+ 
  Finally, install tensorflow:
  
  `pip install tensorflow_gpu`.
