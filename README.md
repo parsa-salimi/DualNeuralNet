@@ -11,7 +11,7 @@ the agents folder uses [tf-agents](https://github.com/tensorflow/agents) and imp
  tensorflow version 2.4.1
  ```
  
- #Compute Canada instructions
+ # Compute Canada instructions
  First, we need to load the following modules:
  ```
  module load scipy-stack
