@@ -20,7 +20,7 @@ the agents folder uses [tf-agents](https://github.com/tensorflow/agents) and imp
  
  Then, create a virtual environment by typing
  
- `virtualencv --no-download [env-name]`
+ `virtualenv --no-download [env-name]`
  
  A directory `[env-name]` will be created in the current working directory.  Now activate the virtual environment:
  
