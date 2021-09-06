@@ -13,6 +13,7 @@ the agents folder uses [tf-agents](https://github.com/tensorflow/agents) and imp
  
  # Compute Canada instructions
  First, we need to load the following modules:
+ 
  ```
  module load scipy-stack
  module load python/3.6
@@ -26,9 +27,16 @@ the agents folder uses [tf-agents](https://github.com/tensorflow/agents) and imp
  
  `source [env-name]/bin/activate`
  
- Finally, install tensorflow:
+ Finally, update pip and install tensorflow:
  
- `pip install tensorflow_gpu`.
+ ```
+ pip install --upgrade pip
+ pip install tensorflow_gpu
+ ```
+ 
+ To run the code in the `agents` folder, install `tf-agents`:
+ 
+ `pip install tf-agents`
  
  We are now ready to run jobs. This is usually done in a batch file as follows:
  
