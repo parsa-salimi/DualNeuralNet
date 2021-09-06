@@ -2,13 +2,6 @@ from tf_agents.metrics import tf_metrics
 from tf_agents.eval.metric_utils import log_metrics
 import logging
 
-#params
-
-
-
-
-
-
 #metrics
 train_metrics = [
     tf_metrics.NumberOfEpisodes(),
@@ -27,7 +20,6 @@ class ShowProgress:
             self.counter += 1
         if self.counter % 100 == 0:
             print("\r{}/{}".format(self.counter, self.total), end="")
-
 
 
 logging.getLogger().setLevel(logging.INFO)
